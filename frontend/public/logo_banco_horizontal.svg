@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" width="320" height="72" role="img" aria-label="Banco de la Nacion">
+  <rect x="0" y="0" width="72" height="72" rx="12" fill="#c8102e"/>
+  <path d="M14 14h17c8 0 13 4 13 10.5 0 4.2-2 7.3-5.8 9 4.9 1.5 7.8 5.3 7.8 10.4 0 7.8-5.8 13.1-15.2 13.1H14V14Zm16.1 16.3c3.9 0 6.1-1.9 6.1-5.1 0-3.1-2.2-4.9-6.1-4.9h-7.2v10h7.2Zm.9 20.4c4.7 0 7.3-2.3 7.3-6.1s-2.6-5.9-7.3-5.9h-8.1v12h8.1Z" fill="#fff"/>
+  <path d="M48 14h8.4l.1 28.4L64.3 14H72L59.4 57h-8.3L51 29.3 43.5 57h-7.6L48 14Z" fill="#fff"/>
+  <path d="M92 21h89v8H92z" fill="#c8102e"/>
+  <text x="92" y="51" fill="#1d1d1b" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Banco de la Nación</text>
+  <path d="M92 58h162" stroke="#c8102e" stroke-width="4" stroke-linecap="round"/>
+</svg>

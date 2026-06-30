@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Banco de la Nacion">
+  <rect width="64" height="64" rx="12" fill="#c8102e"/>
+  <path d="M13 12h12c7.1 0 11.4 3.7 11.4 9.5 0 3.8-1.8 6.6-5 8.1 4.1 1.3 6.6 4.6 6.6 9 0 6.8-5.2 11.4-13.2 11.4H13V12Zm11.4 15.1c3.3 0 5.2-1.7 5.2-4.6 0-2.8-1.9-4.4-5.2-4.4h-4.8v9h4.8Zm.8 16.8c3.9 0 6.1-2 6.1-5.3 0-3.2-2.2-5.1-6.1-5.1h-5.6v10.4h5.6Z" fill="#fff"/>
+  <path d="M41.3 12h7.3l.1 24.8L55.5 12H62L50.8 50h-7.2l-.1-24.3L36.9 50h-6.5l10.9-38Z" fill="#fff"/>
+  <path d="M9 56h46" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>
