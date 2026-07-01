@@ -394,6 +394,109 @@ def movimientos_cliente(cliente_id: str, limit: int = 20) -> list[dict]:
     } for d in docs]
 
 
+def _find_cliente_preaprobado(cliente_id: str) -> dict | None:
+    doc = fs.get_document("creditos_preaprobados", cliente_id)
+    if doc:
+        return doc
+
+    for field in ("cliente_id", "dni", "numero_documento", "documento"):
+        docs = fs.query_collection("creditos_preaprobados", {field: cliente_id}, limit=1)
+        if docs:
+            return docs[0]
+    return None
+
+
+def obtener_ficha(cliente_id: str) -> dict | None:
+    pre = _find_cliente_preaprobado(cliente_id)
+    if not pre:
+        cuenta = fs.get_document("clientes_cuentas", cliente_id)
+        if not cuenta:
+            return None
+        pre = {
+            **cuenta,
+            "id": cliente_id,
+            "cliente_id": cliente_id,
+            "monto_maximo": 0,
+            "monto_credito": 0,
+        }
+
+    dni = str(
+        pre.get("dni")
+        or pre.get("numero_documento")
+        or pre.get("documento")
+        or pre.get("cliente_id")
+        or cliente_id
+    )
+    nombre = _full_name(pre)
+    parts = nombre.split(" ", 1)
+    creditos = creditos_cliente(dni)
+    movimientos = movimientos_cliente(dni, limit=100)
+
+    deuda_total = sum(float(c.get("saldo_total") or c.get("monto_desembolsado") or 0) for c in creditos)
+    cuentas_mora = sum(1 for c in creditos if int(c.get("dias_mora") or 0) > 0)
+    dias_mayor_mora = max([int(c.get("dias_mora") or 0) for c in creditos] or [0])
+    monto_pagado = sum(
+        abs(float(m.get("monto") or 0))
+        for m in movimientos
+        if str(m.get("tipo") or "").lower() in {"pago", "pago_servicio", "pagalo", "debito"}
+    )
+
+    monto_oferta = float(
+        pre.get("monto_maximo")
+        or pre.get("monto_credito")
+        or pre.get("monto")
+        or pre.get("monto_solicitado")
+        or 0
+    )
+
+    return {
+        "comportamiento": [1] * 12 if dias_mayor_mora == 0 else [1] * 10 + [2, 2],
+        "indicadores": {
+            "pct_puntual": 100 if dias_mayor_mora == 0 else 83.3,
+            "dias_prom_mora": dias_mayor_mora,
+            "monto_pagado": monto_pagado,
+        },
+        "cliente": {
+            "id": str(pre.get("cliente_id") or pre.get("id") or cliente_id),
+            "numero_documento": dni,
+            "nombres": pre.get("nombres") or parts[0],
+            "apellidos": pre.get("apellidos") or (parts[1] if len(parts) > 1 else ""),
+            "telefono": pre.get("telefono"),
+            "direccion": pre.get("direccion") or pre.get("direccion_negocio"),
+            "tipo_negocio": pre.get("tipo_negocio") or pre.get("rubro") or pre.get("producto"),
+            "nombre_negocio": pre.get("nombre_negocio") or pre.get("negocio"),
+            "antiguedad_negocio_meses": int(pre.get("antiguedad_negocio_meses") or pre.get("antiguedad_meses") or 0),
+            "calificacion_sbs": pre.get("calificacion_sbs") or pre.get("calificacion") or "NORMAL",
+        },
+        "posicion": {
+            "deuda_total": deuda_total,
+            "cuentas_vigentes": sum(1 for c in creditos if str(c.get("estado") or "").lower() in {"vigente", "aprobado", "desembolsado"}),
+            "cuentas_mora": cuentas_mora,
+            "dias_mayor_mora": dias_mayor_mora,
+        },
+        "historial": [
+            {
+                "producto": c.get("producto"),
+                "monto_desembolsado": float(c.get("monto_desembolsado") or 0),
+                "plazo_meses": c.get("cuotas_total"),
+                "tea": float(c.get("tea") or 0),
+                "estado": c.get("estado"),
+                "dias_mora": int(c.get("dias_mora") or 0),
+                "cuotas_total": int(c.get("cuotas_total") or 0),
+                "cuotas_pagadas": int(c.get("cuotas_pagadas") or 0),
+            }
+            for c in creditos[:5]
+        ],
+        "oferta": {
+            "monto_maximo": monto_oferta,
+            "plazo_sugerido_meses": int(pre.get("plazo_sugerido_meses") or pre.get("plazo_meses") or 12),
+            "tea_referencial": float(pre.get("tea_referencial") or pre.get("tea") or 0),
+            "score_confianza": int(pre.get("score_confianza") or pre.get("score_prioridad") or pre.get("score") or 0),
+            "fecha_vencimiento": pre.get("fecha_vencimiento"),
+        } if monto_oferta > 0 else None,
+    }
+
+
 def notificaciones_cliente(cliente_id: str) -> list[dict]:
     docs = fs.query_collection("notificaciones", {"dni": cliente_id}, limit=30)
     if not docs:

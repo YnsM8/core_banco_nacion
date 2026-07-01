@@ -4,6 +4,8 @@ from app.core_bn.cfg_database import get_db
 from app.core_bn.cfg_auth import get_current_asesor
 from app.schemas.sch_ficha import FichaOut, UbicacionIn
 from app.repositories import rep_ficha
+from app.core_bn.cfg_config import settings
+from app.repositories import rep_firebase
 
 router = APIRouter()
 
@@ -15,7 +17,10 @@ def ficha_cliente(
     asesor: dict = Depends(get_current_asesor),
 ):
     """Ficha completa del cliente (M3 / HU-11)."""
-    ficha = rep_ficha.obtener_ficha(db, cliente_id)
+    if settings.DATA_BACKEND.lower() == "firebase":
+        ficha = rep_firebase.obtener_ficha(cliente_id)
+    else:
+        ficha = rep_ficha.obtener_ficha(db, cliente_id)
     if ficha is None:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return ficha
