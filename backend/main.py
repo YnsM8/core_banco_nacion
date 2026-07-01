@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,12 +38,14 @@ async def audit_http_requests(request: Request, call_next):
         return response
     finally:
         elapsed_ms = (request_started_at()[0] - started_perf) * 1000
-        await run_in_threadpool(
-            log_http_request,
-            request,
-            status_code=status_code,
-            started_at=started_at,
-            elapsed_ms=elapsed_ms,
+        asyncio.create_task(
+            run_in_threadpool(
+                log_http_request,
+                request,
+                status_code=status_code,
+                started_at=started_at,
+                elapsed_ms=elapsed_ms,
+            )
         )
 
 app.include_router(rtr_auth.router,    prefix="/auth",     tags=["Auth"])

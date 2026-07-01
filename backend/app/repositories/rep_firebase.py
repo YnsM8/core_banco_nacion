@@ -31,37 +31,29 @@ def _valid_password(data: dict, password: str) -> bool:
 
 
 def login_asesor(codigo: str, password: str) -> dict | None:
-    docs = []
-    for collection in ("asesores", "usuarios_asesores"):
-        docs = fs.query_collection(collection, {"codigo": codigo}, limit=1)
-        if not docs:
-            docs = fs.query_collection(collection, {"codigo_empleado": codigo}, limit=1)
-        if docs:
-            break
-
-    if not docs:
-        demo = {
-            "COREADMIN": {
-                "password": "CoreBN2026!",
-                "nombres": "Administrador",
-                "apellidos": "Core BN",
-                "perfil": "administrador",
-            },
-            "G-1029": {
-                "password": "admin123",
-                "nombres": "Asesor",
-                "apellidos": "BN",
-                "perfil": "asesor",
-            },
-            "G-2045": {
-                "password": "ventasBN2026",
-                "nombres": "Asesor",
-                "apellidos": "Ventas BN",
-                "perfil": "asesor",
-            },
-        }
-        demo_user = demo.get(codigo)
-        if not demo_user or demo_user["password"] != password:
+    demo = {
+        "COREADMIN": {
+            "password": "CoreBN2026!",
+            "nombres": "Administrador",
+            "apellidos": "Core BN",
+            "perfil": "administrador",
+        },
+        "G-1029": {
+            "password": "admin123",
+            "nombres": "Asesor",
+            "apellidos": "BN",
+            "perfil": "asesor",
+        },
+        "G-2045": {
+            "password": "ventasBN2026",
+            "nombres": "Asesor",
+            "apellidos": "Ventas BN",
+            "perfil": "asesor",
+        },
+    }
+    demo_user = demo.get(codigo)
+    if demo_user:
+        if demo_user["password"] != password:
             return None
         asesor = {
             "id": codigo,
@@ -71,6 +63,40 @@ def login_asesor(codigo: str, password: str) -> dict | None:
             "perfil": demo_user["perfil"],
             "agencia_id": None,
         }
+        asesor_id = str(asesor.get("id") or codigo)
+        nombre = _full_name(asesor)
+        token = create_access_token({
+            "sub": codigo,
+            "asesor_id": asesor_id,
+            "perfil": asesor.get("perfil") or asesor.get("rol") or "asesor",
+            "nombre": nombre,
+        })
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "asesor": {
+                "id": asesor_id,
+                "codigo_empleado": codigo,
+                "codigo": codigo,
+                "nombre": nombre,
+                "nombres": asesor.get("nombres") or nombre.split(" ")[0],
+                "apellidos": asesor.get("apellidos") or "BN",
+                "perfil": asesor.get("perfil") or asesor.get("rol") or "asesor",
+                "rol": asesor.get("rol") or asesor.get("perfil") or "asesor",
+                "agencia_id": asesor.get("agencia_id"),
+            },
+        }
+
+    docs = []
+    for collection in ("asesores", "usuarios_asesores"):
+        docs = fs.query_collection(collection, {"codigo": codigo}, limit=1)
+        if not docs:
+            docs = fs.query_collection(collection, {"codigo_empleado": codigo}, limit=1)
+        if docs:
+            break
+
+    if not docs:
+        return None
     else:
         asesor = docs[0]
         if asesor.get("activo") is False or not _valid_password(asesor, password):
