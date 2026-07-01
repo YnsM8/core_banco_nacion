@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.core_bn.cfg_database import get_db
 from app.core_bn.cfg_auth import get_current_asesor
@@ -20,7 +21,12 @@ def ficha_cliente(
     if settings.DATA_BACKEND.lower() == "firebase":
         ficha = rep_firebase.obtener_ficha(cliente_id)
     else:
-        ficha = rep_ficha.obtener_ficha(db, cliente_id)
+        try:
+            ficha = rep_ficha.obtener_ficha(db, cliente_id)
+        except SQLAlchemyError:
+            ficha = None
+        if ficha is None:
+            ficha = rep_firebase.obtener_ficha(cliente_id)
     if ficha is None:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return ficha
