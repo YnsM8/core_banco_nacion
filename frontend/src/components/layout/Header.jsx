@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Briefcase, FileText, ShieldCheck, HandCoins,
-  BarChart3, Clock, ChevronDown, LogOut, User,
+  LayoutDashboard, Briefcase, FileText, Clock, ChevronDown, LogOut, User,
 } from 'lucide-react'
 import Logo from '../ui/Logo.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -13,11 +12,7 @@ export const TABS = [
   { to: '/inicio', label: 'Inicio', icon: LayoutDashboard },
   { to: '/cartera', label: 'Cartera', icon: Briefcase },
   { to: '/solicitudes', label: 'Solicitudes', icon: FileText },
-  { to: '/evaluacion', label: 'Evaluación', icon: ShieldCheck },
-  { to: '/cobranza', label: 'Cobranza', icon: HandCoins },
-  { to: '/reportes', label: 'Reportes', icon: BarChart3 },
 ]
-
 function Reloj() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {

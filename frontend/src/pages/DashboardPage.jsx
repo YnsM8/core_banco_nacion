@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Briefcase, FileText, ShieldCheck, HandCoins, BarChart3, MapPin,
-  CheckCircle2, AlertTriangle, TrendingUp, ArrowRight, PlusCircle,
+  Briefcase, FileText, HandCoins, BarChart3, MapPin,
+  CheckCircle2, AlertTriangle, TrendingUp, ArrowRight,
 } from 'lucide-react'
 import PageHead from '../components/layout/PageHead.jsx'
 import Card from '../components/ui/Card.jsx'
@@ -16,14 +16,9 @@ import { obtenerResumenEcosistema } from '../services/solicitudesService.js'
 import { extractError, formatDateTime } from '../utils/format.js'
 
 const ACCESOS = [
-  { to: '/cartera', icon: Briefcase, color: '#c8102e', t: 'Cartera del día', d: 'Clientes asignados para visitar hoy' },
-  { to: '/solicitudes/nueva', icon: PlusCircle, color: '#c8102e', t: 'Nueva solicitud', d: 'Registrar una solicitud de crédito' },
-  { to: '/evaluacion', icon: ShieldCheck, color: '#8f0018', t: 'Pre-evaluar / Buró', d: 'Capacidad de pago y listas negras' },
-  { to: '/cobranza', icon: HandCoins, color: '#c8102e', t: 'Cobranza', d: 'Gestión de mora del día' },
-  { to: '/solicitudes', icon: FileText, color: '#8f0018', t: 'Mis solicitudes', d: 'Tablero de estado de expedientes' },
-  { to: '/reportes', icon: BarChart3, color: '#c8102e', t: 'Reportes', d: 'Productividad del equipo' },
+  { to: '/cartera', icon: Briefcase, color: '#c8102e', t: 'Cartera y visitas', d: 'Acciones registradas desde Fuerza de Ventas' },
+  { to: '/solicitudes', icon: FileText, color: '#8f0018', t: 'Solicitudes Core', d: 'Expedientes creados desde ambas apps' },
 ]
-
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -216,7 +211,7 @@ export default function DashboardPage() {
             )}
           </Card>
 
-          <h2 className="cm-section-title">Accesos rápidos</h2>
+          <h2 className="cm-section-title">Vistas del Core</h2>
           <div className="cm-quick-grid">
             {ACCESOS.map((a) => {
               const Icon = a.icon
