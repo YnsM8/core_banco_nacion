@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FileText, PlusCircle, RefreshCw, StickyNote, Send } from 'lucide-react'
+import { FileText, RefreshCw, StickyNote, Send } from 'lucide-react'
 import PageHead from '../components/layout/PageHead.jsx'
 import Loader from '../components/ui/Loader.jsx'
 import Alert from '../components/ui/Alert.jsx'
@@ -13,7 +12,6 @@ import {
 import { extractError, formatDate, formatDateTime } from '../utils/format.js'
 
 export default function SolicitudesPage() {
-  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [outbox, setOutbox] = useState([])
   const [syncLog, setSyncLog] = useState([])
@@ -78,7 +76,6 @@ export default function SolicitudesPage() {
         actions={
           <>
             <button className="hb-btn hb-btn-gray hb-btn-sm" onClick={cargar}><RefreshCw size={15} /> Actualizar</button>
-            <button className="hb-btn" onClick={() => navigate('/solicitudes/nueva')}><PlusCircle size={16} /> Nueva</button>
           </>
         }
       />
@@ -90,9 +87,6 @@ export default function SolicitudesPage() {
       ) : items.length === 0 ? (
         <div className="hb-card hb-table-empty">
           Aun no hay solicitudes registradas en el flujo central.
-          <div style={{ marginTop: 14 }}>
-            <button className="hb-btn" onClick={() => navigate('/solicitudes/nueva')}><PlusCircle size={16} /> Registrar la primera</button>
-          </div>
         </div>
       ) : (
         <div className="hb-card" style={{ padding: 0 }}>

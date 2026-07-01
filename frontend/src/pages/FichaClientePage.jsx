@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, UserCircle2, Phone, MapPin, Store, BadgeCheck,
-  Wallet, History, Gift, Activity, PlusCircle,
+  Wallet, History, Gift, Activity,
 } from 'lucide-react'
 import PageHead from '../components/layout/PageHead.jsx'
 import Card from '../components/ui/Card.jsx'
@@ -37,19 +37,6 @@ export default function FichaClientePage() {
   const { cliente, posicion, historial = [], oferta, indicadores } = ficha
   const nombre = `${cliente.nombres} ${cliente.apellidos}`.trim()
 
-  const irNuevaSolicitud = () => {
-    navigate('/solicitudes/nueva', {
-      state: {
-        numero_documento: cliente.numero_documento,
-        nombres: cliente.nombres,
-        apellidos: cliente.apellidos,
-        telefono: cliente.telefono,
-        tipo_negocio: cliente.tipo_negocio,
-        nombre_negocio: cliente.nombre_negocio,
-      },
-    })
-  }
-
   return (
     <>
       <button className="cm-back" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Volver</button>
@@ -58,11 +45,6 @@ export default function FichaClientePage() {
         title={nombre}
         subtitle={`DNI ${cliente.numero_documento}`}
         icon={UserCircle2}
-        actions={
-          <button className="hb-btn" onClick={irNuevaSolicitud}>
-            <PlusCircle size={16} /> Nueva solicitud
-          </button>
-        }
       />
 
       <div className="hb-grid-2" style={{ alignItems: 'start' }}>

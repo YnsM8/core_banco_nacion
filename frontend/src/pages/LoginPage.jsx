@@ -36,8 +36,8 @@ const SLIDES = [
     tag: 'FUERZA DE VENTAS',
     icon: Route,
     titulo: 'En el campo',
-    desc: 'Tu cartera del día, evaluaciones crediticias y solicitudes en un solo lugar. Acompañamos al asesor en cada visita.',
-    pills: ['Cartera', 'Evaluación', 'Cobranza'],
+    desc: 'Tu cartera del día, visitas y solicitudes sincronizadas en un solo lugar. Acompañamos al asesor en cada recorrido.',
+    pills: ['Cartera', 'Visitas', 'Solicitudes'],
   },
 ]
 

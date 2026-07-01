@@ -7,10 +7,6 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import CarteraPage from './pages/CarteraPage.jsx'
 import FichaClientePage from './pages/FichaClientePage.jsx'
 import SolicitudesPage from './pages/SolicitudesPage.jsx'
-import NuevaSolicitudPage from './pages/NuevaSolicitudPage.jsx'
-import EvaluacionPage from './pages/EvaluacionPage.jsx'
-import CobranzaPage from './pages/CobranzaPage.jsx'
-import ReportesPage from './pages/ReportesPage.jsx'
 
 // Layout de las rutas autenticadas: cabecera + pestañas + contenido.
 function PrivateLayout({ children }) {
@@ -35,10 +31,10 @@ export default function App() {
       <Route path="/cartera" element={<PrivateLayout><CarteraPage /></PrivateLayout>} />
       <Route path="/clientes/:clienteId/ficha" element={<PrivateLayout><FichaClientePage /></PrivateLayout>} />
       <Route path="/solicitudes" element={<PrivateLayout><SolicitudesPage /></PrivateLayout>} />
-      <Route path="/solicitudes/nueva" element={<PrivateLayout><NuevaSolicitudPage /></PrivateLayout>} />
-      <Route path="/evaluacion" element={<PrivateLayout><EvaluacionPage /></PrivateLayout>} />
-      <Route path="/cobranza" element={<PrivateLayout><CobranzaPage /></PrivateLayout>} />
-      <Route path="/reportes" element={<PrivateLayout><ReportesPage /></PrivateLayout>} />
+      <Route path="/solicitudes/nueva" element={<Navigate to="/solicitudes" replace />} />
+      <Route path="/evaluacion" element={<Navigate to="/inicio" replace />} />
+      <Route path="/cobranza" element={<Navigate to="/inicio" replace />} />
+      <Route path="/reportes" element={<Navigate to="/inicio" replace />} />
 
       <Route path="/" element={<Navigate to="/inicio" replace />} />
       <Route path="*" element={<Navigate to="/inicio" replace />} />
