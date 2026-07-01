@@ -8,13 +8,15 @@ import Badge from '../components/ui/Badge.jsx'
 import Money from '../components/ui/Money.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import {
-  listarSolicitudes, listarNotas, agregarNota,
+  obtenerFlujoCore, listarNotas, agregarNota,
 } from '../services/solicitudesService.js'
 import { extractError, formatDate, formatDateTime } from '../utils/format.js'
 
 export default function SolicitudesPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
+  const [outbox, setOutbox] = useState([])
+  const [syncLog, setSyncLog] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -27,8 +29,12 @@ export default function SolicitudesPage() {
 
   const cargar = useCallback(() => {
     setLoading(true)
-    listarSolicitudes()
-      .then((data) => setItems(data || []))
+    obtenerFlujoCore({ limit: 250 })
+      .then((data) => {
+        setItems(data?.solicitudes || [])
+        setOutbox(data?.outbox || [])
+        setSyncLog(data?.sync_log || [])
+      })
       .catch((err) => setError(extractError(err)))
       .finally(() => setLoading(false))
   }, [])
@@ -66,8 +72,8 @@ export default function SolicitudesPage() {
   return (
     <>
       <PageHead
-        title="Mis solicitudes"
-        subtitle="Tablero de estado de tus expedientes de crédito"
+        title="Solicitudes del Core"
+        subtitle="Vista centralizada de expedientes creados desde App Clientes y Fuerza de Ventas"
         icon={FileText}
         actions={
           <>
@@ -83,7 +89,7 @@ export default function SolicitudesPage() {
         <Loader text="Cargando solicitudes…" />
       ) : items.length === 0 ? (
         <div className="hb-card hb-table-empty">
-          Aún no has registrado solicitudes este mes.
+          Aun no hay solicitudes registradas en el flujo central.
           <div style={{ marginTop: 14 }}>
             <button className="hb-btn" onClick={() => navigate('/solicitudes/nueva')}><PlusCircle size={16} /> Registrar la primera</button>
           </div>
@@ -96,6 +102,8 @@ export default function SolicitudesPage() {
                 <tr>
                   <th>Expediente</th>
                   <th>Cliente</th>
+                  <th>DNI</th>
+                  <th>Canal</th>
                   <th className="num">Solicitado</th>
                   <th className="num">Aprobado</th>
                   <th>Estado</th>
@@ -108,6 +116,8 @@ export default function SolicitudesPage() {
                   <tr key={s.id}>
                     <td><strong>{s.numero_expediente}</strong></td>
                     <td>{s.cliente_nombre}</td>
+                    <td>{s.dni || s.numero_documento || '—'}</td>
+                    <td><Badge estado={s.canal || 'asesor'} tone={String(s.canal || '').toLowerCase() === 'cliente' ? 'turq' : 'gray'} /></td>
                     <td className="num"><Money value={s.monto_solicitado} /></td>
                     <td className="num">{s.monto_aprobado ? <Money value={s.monto_aprobado} /> : '—'}</td>
                     <td><Badge estado={s.estado} /></td>
@@ -121,6 +131,39 @@ export default function SolicitudesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {!loading && (outbox.length > 0 || syncLog.length > 0) && (
+        <div className="hb-grid-2" style={{ marginTop: 16 }}>
+          <div className="hb-card">
+            <h3 className="hb-card-title">Eventos pendientes / outbox</h3>
+            <div className="cm-sync-list">
+              {outbox.slice(0, 6).map((ev, i) => (
+                <div className="cm-sync-row" key={`${ev.entidad_id || ev.id || i}-outbox`}>
+                  <div>
+                    <strong>{ev.entidad || 'evento'}</strong>
+                    <small>{ev.operacion || 'sync'} · {ev.entidad_id || ev.id || 'sin referencia'}</small>
+                  </div>
+                  <Badge estado={ev.estado || 'pendiente'} />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hb-card">
+            <h3 className="hb-card-title">Bitacora de sincronizacion</h3>
+            <div className="cm-sync-list">
+              {syncLog.slice(0, 6).map((log, i) => (
+                <div className="cm-sync-row" key={`${log.referencia || log.id || i}-log`}>
+                  <div>
+                    <strong>{log.entidad || log.direccion || 'sync'}</strong>
+                    <small>{log.detalle || log.referencia || formatDateTime(log.timestamp || log.created_at)}</small>
+                  </div>
+                  <Badge estado={log.estado_resultado || log.estado || 'ok'} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

@@ -6,6 +6,16 @@ export async function listarSolicitudes() {
   return data
 }
 
+export async function listarSolicitudesAdmin({ limit = 200 } = {}) {
+  const { data } = await api.get('/solicitudes/admin/todas', { params: { limit } })
+  return data
+}
+
+export async function obtenerFlujoCore({ limit = 200 } = {}) {
+  const { data } = await api.get('/solicitudes/admin/flujo', { params: { limit } })
+  return data
+}
+
 /** Crea una solicitud de crédito. POST /solicitudes */
 export async function crearSolicitud(payload) {
   const { data } = await api.post('/solicitudes', payload)

@@ -11,7 +11,7 @@ import Alert from '../components/ui/Alert.jsx'
 import Money from '../components/ui/Money.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { listarCartera } from '../services/carteraService.js'
-import { listarSolicitudes } from '../services/solicitudesService.js'
+import { obtenerFlujoCore } from '../services/solicitudesService.js'
 import { extractError } from '../utils/format.js'
 
 const ACCESOS = [
@@ -28,17 +28,23 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const [cartera, setCartera] = useState([])
   const [solicitudes, setSolicitudes] = useState([])
+  const [outbox, setOutbox] = useState([])
+  const [syncLog, setSyncLog] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let alive = true
-    Promise.allSettled([listarCartera(), listarSolicitudes()])
-      .then(([c, s]) => {
+    Promise.allSettled([listarCartera(), obtenerFlujoCore({ limit: 200 })])
+      .then(([c, f]) => {
         if (!alive) return
         if (c.status === 'fulfilled') setCartera(c.value || [])
-        if (s.status === 'fulfilled') setSolicitudes(s.value || [])
-        if (c.status === 'rejected' && s.status === 'rejected') {
+        if (f.status === 'fulfilled') {
+          setSolicitudes(f.value?.solicitudes || [])
+          setOutbox(f.value?.outbox || [])
+          setSyncLog(f.value?.sync_log || [])
+        }
+        if (c.status === 'rejected' && f.status === 'rejected') {
           setError(extractError(c.reason, 'No se pudieron cargar los datos.'))
         }
       })
@@ -50,12 +56,15 @@ export default function DashboardPage() {
   const visitados = cartera.filter((c) => c.estado_visita && c.estado_visita !== 'pendiente').length
   const montoCartera = cartera.reduce((acc, c) => acc + (c.monto_credito || 0), 0)
   const aprobadas = solicitudes.filter((s) => ['aprobado', 'desembolsado'].includes(s.estado)).length
+  const solicitudesCliente = solicitudes.filter((s) => String(s.canal || '').toLowerCase() === 'cliente').length
+  const pendientesCore = solicitudes.filter((s) => ['enviado', 'pendiente', 'recibido_comite', 'en_evaluacion'].includes(String(s.estado || '').toLowerCase())).length
+  const outboxPendiente = outbox.filter((o) => String(o.estado || '').toLowerCase() === 'pendiente').length
 
   return (
     <>
       <PageHead
-        title={`Hola, ${user?.nombres || 'asesor'}`}
-        subtitle="Este es el resumen de tu jornada en campo."
+        title={`Core central, ${user?.nombres || 'administrador'}`}
+        subtitle="Vista consolidada de solicitudes, acciones y sincronizacion de App Clientes y Fuerza de Ventas."
       />
 
       {error && <Alert tipo="error">{error}</Alert>}
@@ -92,9 +101,25 @@ export default function DashboardPage() {
             <div className="cm-kpi" style={{ borderLeftColor: '#c8102e' }}>
               <span className="cm-kpi-ico" style={{ background: '#ffeef1', color: '#c8102e' }}><FileText size={24} /></span>
               <div>
-                <div className="cm-kpi-label">Solicitudes aprobadas</div>
-                <span className="cm-kpi-val">{aprobadas}</span>
-                <small>de {solicitudes.length} este mes</small>
+                <div className="cm-kpi-label">Solicitudes Core</div>
+                <span className="cm-kpi-val">{solicitudes.length}</span>
+                <small>{aprobadas} aprobadas · {pendientesCore} en flujo</small>
+              </div>
+            </div>
+            <div className="cm-kpi" style={{ borderLeftColor: '#8f0018' }}>
+              <span className="cm-kpi-ico" style={{ background: '#ffeef1', color: '#8f0018' }}><FileText size={24} /></span>
+              <div>
+                <div className="cm-kpi-label">Desde App Clientes</div>
+                <span className="cm-kpi-val">{solicitudesCliente}</span>
+                <small>capturadas por canal cliente</small>
+              </div>
+            </div>
+            <div className="cm-kpi" style={{ borderLeftColor: '#c8102e' }}>
+              <span className="cm-kpi-ico" style={{ background: '#ffeef1', color: '#c8102e' }}><TrendingUp size={24} /></span>
+              <div>
+                <div className="cm-kpi-label">Sync pendiente</div>
+                <span className="cm-kpi-val">{outboxPendiente}</span>
+                <small>{outbox.length} eventos · {syncLog.length} logs</small>
               </div>
             </div>
           </div>

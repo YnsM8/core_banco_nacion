@@ -451,3 +451,15 @@ button { font-family: inherit; cursor: pointer; }
 .cm-chip.sel { border-color: var(--hb-red); background: var(--hb-red-light); color: var(--hb-red-dark); }
 
 .cm-section-title { font-size: 16px; font-weight: 700; margin: 24px 0 12px; color: #374151; }
+
+.cm-sync-list { display: flex; flex-direction: column; gap: 10px; }
+.cm-sync-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--hb-border);
+}
+.cm-sync-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.cm-sync-row strong { display: block; font-size: 13.5px; }
+.cm-sync-row small {
+  display: block; color: var(--hb-muted); font-size: 12px;
+  max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
