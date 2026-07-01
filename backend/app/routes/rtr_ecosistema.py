@@ -99,6 +99,7 @@ def resumen_ecosistema(
     _require_admin(asesor)
     flujo = rep_firebase.flujo_creditos(limit)
     operaciones = fs.list_collection("operaciones_cliente", limit=limit)
+    movimientos = fs.list_collection("clientes_movimientos", limit=limit)
     visitas = fs.list_collection("visitas_ventas", limit=limit)
     clientes = fs.list_collection("clientes_cuentas", limit=limit)
     http_logs = list_http_request_log(limit)
@@ -110,11 +111,13 @@ def resumen_ecosistema(
             **flujo.get("resumen", {}),
             "clientes": len(clientes),
             "operaciones_cliente": len(operaciones),
+            "clientes_movimientos": len(movimientos),
             "visitas_ventas": len(visitas),
             "http_requests": len(http_logs),
         },
         "solicitudes": flujo.get("solicitudes", []),
         "operaciones_cliente": operaciones,
+        "clientes_movimientos": movimientos,
         "visitas_ventas": visitas,
         "sync_outbox": flujo.get("outbox", []),
         "sync_log": flujo.get("sync_log", []),

@@ -9,10 +9,11 @@ import Card from '../components/ui/Card.jsx'
 import Loader from '../components/ui/Loader.jsx'
 import Alert from '../components/ui/Alert.jsx'
 import Money from '../components/ui/Money.jsx'
+import Badge from '../components/ui/Badge.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { listarCartera } from '../services/carteraService.js'
-import { obtenerFlujoCore } from '../services/solicitudesService.js'
-import { extractError } from '../utils/format.js'
+import { obtenerResumenEcosistema } from '../services/solicitudesService.js'
+import { extractError, formatDateTime } from '../utils/format.js'
 
 const ACCESOS = [
   { to: '/cartera', icon: Briefcase, color: '#c8102e', t: 'Cartera del día', d: 'Clientes asignados para visitar hoy' },
@@ -28,6 +29,9 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const [cartera, setCartera] = useState([])
   const [solicitudes, setSolicitudes] = useState([])
+  const [operaciones, setOperaciones] = useState([])
+  const [movimientos, setMovimientos] = useState([])
+  const [visitas, setVisitas] = useState([])
   const [outbox, setOutbox] = useState([])
   const [syncLog, setSyncLog] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,13 +39,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let alive = true
-    Promise.allSettled([listarCartera(), obtenerFlujoCore({ limit: 200 })])
+    Promise.allSettled([listarCartera(), obtenerResumenEcosistema({ limit: 200 })])
       .then(([c, f]) => {
         if (!alive) return
         if (c.status === 'fulfilled') setCartera(c.value || [])
         if (f.status === 'fulfilled') {
           setSolicitudes(f.value?.solicitudes || [])
-          setOutbox(f.value?.outbox || [])
+          setOperaciones(f.value?.operaciones_cliente || [])
+          setMovimientos(f.value?.clientes_movimientos || [])
+          setVisitas(f.value?.visitas_ventas || [])
+          setOutbox(f.value?.sync_outbox || [])
           setSyncLog(f.value?.sync_log || [])
         }
         if (c.status === 'rejected' && f.status === 'rejected') {
@@ -59,6 +66,48 @@ export default function DashboardPage() {
   const solicitudesCliente = solicitudes.filter((s) => String(s.canal || '').toLowerCase() === 'cliente').length
   const pendientesCore = solicitudes.filter((s) => ['enviado', 'pendiente', 'recibido_comite', 'en_evaluacion'].includes(String(s.estado || '').toLowerCase())).length
   const outboxPendiente = outbox.filter((o) => String(o.estado || '').toLowerCase() === 'pendiente').length
+  const eventos = [
+    ...movimientos.map((m) => ({
+      id: `mov-${m.id}`,
+      tipo: 'Movimiento cliente',
+      canal: m.canal || 'app_clientes',
+      detalle: m.descripcion || m.concepto || 'Movimiento',
+      cliente: m.dni || m.cliente_id || m.beneficiario_dni,
+      monto: m.monto,
+      estado: m.estado || m.tipo || 'registrado',
+      fecha: m.fecha_operacion || m.created_at || m.fecha,
+    })),
+    ...operaciones.map((o) => ({
+      id: `op-${o.id}`,
+      tipo: 'Operacion cliente',
+      canal: o.canal || 'app_clientes',
+      detalle: o.descripcion || o.concepto || o.tipo,
+      cliente: o.cliente_id || o.cod_cuenta_origen,
+      monto: o.monto,
+      estado: o.estado || 'pendiente',
+      fecha: o.created_at,
+    })),
+    ...visitas.map((v) => ({
+      id: `vis-${v.id}`,
+      tipo: 'Visita ventas',
+      canal: 'fuerza_ventas',
+      detalle: v.resultado || v.observacion || 'Visita registrada',
+      cliente: v.cartera_id || v.cliente_id,
+      monto: null,
+      estado: v.resultado || 'registrado',
+      fecha: v.created_at || v.timestamp_visita,
+    })),
+    ...solicitudes.map((s) => ({
+      id: `sol-${s.id}`,
+      tipo: 'Solicitud credito',
+      canal: s.canal || 'asesor',
+      detalle: s.numero_expediente || 'Solicitud',
+      cliente: s.dni || s.cliente_nombre,
+      monto: s.monto_solicitado,
+      estado: s.estado,
+      fecha: s.created_at,
+    })),
+  ].sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0)).slice(0, 12)
 
   return (
     <>
@@ -122,7 +171,50 @@ export default function DashboardPage() {
                 <small>{outbox.length} eventos · {syncLog.length} logs</small>
               </div>
             </div>
+            <div className="cm-kpi" style={{ borderLeftColor: '#8f0018' }}>
+              <span className="cm-kpi-ico" style={{ background: '#ffeef1', color: '#8f0018' }}><HandCoins size={24} /></span>
+              <div>
+                <div className="cm-kpi-label">Movimientos clientes</div>
+                <span className="cm-kpi-val">{movimientos.length}</span>
+                <small>{operaciones.length} operaciones Core</small>
+              </div>
+            </div>
           </div>
+
+          <Card title="Movimientos recientes del ecosistema" icon={BarChart3} style={{ marginBottom: 22 }}>
+            {eventos.length === 0 ? (
+              <div className="hb-table-empty">Aun no hay movimientos centralizados.</div>
+            ) : (
+              <div className="hb-table-wrap">
+                <table className="hb-table">
+                  <thead>
+                    <tr>
+                      <th>Proceso</th>
+                      <th>Canal</th>
+                      <th>Detalle</th>
+                      <th>Cliente / referencia</th>
+                      <th className="num">Monto</th>
+                      <th>Estado</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {eventos.map((ev) => (
+                      <tr key={ev.id}>
+                        <td><strong>{ev.tipo}</strong></td>
+                        <td><Badge estado={ev.canal} tone={ev.canal === 'app_clientes' ? 'turq' : 'gray'} /></td>
+                        <td>{ev.detalle || '—'}</td>
+                        <td>{ev.cliente || '—'}</td>
+                        <td className="num">{ev.monto != null ? <Money value={ev.monto} /> : '—'}</td>
+                        <td><Badge estado={ev.estado || 'registrado'} /></td>
+                        <td>{formatDateTime(ev.fecha)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
 
           <h2 className="cm-section-title">Accesos rápidos</h2>
           <div className="cm-quick-grid">

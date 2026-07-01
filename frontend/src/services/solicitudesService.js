@@ -16,6 +16,11 @@ export async function obtenerFlujoCore({ limit = 200 } = {}) {
   return data
 }
 
+export async function obtenerResumenEcosistema({ limit = 200 } = {}) {
+  const { data } = await api.get('/ecosistema/resumen', { params: { limit } })
+  return data
+}
+
 /** Crea una solicitud de crédito. POST /solicitudes */
 export async function crearSolicitud(payload) {
   const { data } = await api.post('/solicitudes', payload)

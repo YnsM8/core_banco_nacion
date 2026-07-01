@@ -112,6 +112,14 @@ class OperacionIn(BaseModel):
     tipo: str   # pago_cuota / transferencia / recarga
     monto: float
     moneda: str = "PEN"
+    descripcion: str | None = None
+    concepto: str | None = None
+    canal: str | None = None
+    entidad: str | None = None
+    tramite: str | None = None
+    beneficiario_dni: str | None = None
+    secuencia_bn: str | None = None
+    codigo_tasa: str | None = None
 
 
 class OperacionOut(BaseModel):
