@@ -61,18 +61,11 @@ def list_http_request_log(limit: int = 100) -> list[dict]:
     return fs.list_collection("http_requests_log", limit=limit)
 
 
-def _depends_on_auth(dependant) -> bool:
-    security_requirements = getattr(dependant, "security_requirements", None)
-    if security_requirements:
-        return True
-
-    for dep in getattr(dependant, "dependencies", []) or []:
-        call = getattr(dep, "call", None)
-        if getattr(call, "__name__", "") == "get_current_asesor":
-            return True
-        if _depends_on_auth(dep):
-            return True
-    return False
+PUBLIC_ENDPOINTS = {
+    ("GET", "/"),
+    ("POST", "/auth/login"),
+    ("POST", "/cliente/login"),
+}
 
 
 def endpoint_catalog(app) -> list[dict]:
@@ -90,6 +83,6 @@ def endpoint_catalog(app) -> list[dict]:
                 "name": route.name,
                 "summary": route.summary,
                 "tags": route.tags,
-                "requires_auth": _depends_on_auth(route.dependant),
+                "requires_auth": (method, route.path) not in PUBLIC_ENDPOINTS,
             })
     return sorted(endpoints, key=lambda item: (item["path"], item["method"]))
